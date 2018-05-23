@@ -78,6 +78,7 @@ class DidatticKMeans:
         self.K = K
         self.centroid_indexs = centroid_indexs
         self.dist = dist
+        self.jdata = None
 
     def __continue__(self, c_old, c_new):
         return (np.all(c_old[0] == c_new[0]) and np.all(c_old[1] == c_new[1])) \
@@ -113,10 +114,10 @@ class DidatticKMeans:
         return centroids
 
     def fit(self, dataset, step_by_step=False):
-        
-        kmeans_data = dict()
-        kmeans_data['data'] = dataset.tolist()
-        kmeans_data['iterations'] = list()
+
+        self.jdata = dict()
+        self.jdata['data'] = dataset.tolist()
+        self.jdata['iterations'] = list()
         kmeans_iteration = dict()
 
         plot_kmeans(dataset, title='K-Means - Dataset', maxvalue=np.max(dataset)+1)
@@ -132,7 +133,7 @@ class DidatticKMeans:
         self.__print_centroids(centroids)
         kmeans_iteration['centers'] = [c.tolist() for c in centroids]
         kmeans_iteration['labels'] = labels[:]
-        kmeans_data['iterations'].append(kmeans_iteration)
+        self.jdata['iterations'].append(kmeans_iteration)
 
         clusters, labels = self.__calculate_clusters(dataset, centroids)
         new_centroids = self.__calculate_centroids(clusters)
@@ -163,4 +164,6 @@ class DidatticKMeans:
         self.__print_centroids(centroids)
 
         plot_kmeans(dataset, clusters=clusters, title='K-Means - Result', maxvalue=np.max(dataset)+1)
-        return kmeans_data
+
+    def get_jdata(self):
+        return self.jdata

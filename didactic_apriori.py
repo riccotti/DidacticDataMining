@@ -12,6 +12,9 @@ class DidatticApriori:
         self.itemset_count = defaultdict(int)
         self.itemset_unfrequent = dict()
 
+        self.num_transactions = -1
+        self.jdata = None
+
     def __count_itemsets(self, transactions, max_len):
         for transaction in transactions:
             for itemset in itertools.combinations(transaction, max_len):
@@ -32,6 +35,7 @@ class DidatticApriori:
         print('Apriori - Iteration %d' % max_len)
         count = 0
         count_unfrequent = 0
+        self.jdata['itemsets'].append(list())
         for itemset in sorted(self.itemset_count):
             unfrequent = 'X' if itemset in self.itemset_unfrequent else ''
             if len(itemset) >= max_len:
@@ -39,6 +43,7 @@ class DidatticApriori:
                 if self.sup_type == 'r':
                     sup /= float(num_transactions)
                 print(itemset, '%.2f' % sup, unfrequent)
+                self.jdata['itemsets'][-1].append((itemset, sup, unfrequent))
                 count += 1
                 if unfrequent == 'X':
                     count_unfrequent += 1
@@ -51,6 +56,7 @@ class DidatticApriori:
         for transaction in transactions:
             sorted_transactions.append(sorted(transaction))
         transactions = sorted_transactions
+        self.jdata['data'] = transactions
 
         max_len = 1
         self.num_transactions = len(transactions)
@@ -59,6 +65,7 @@ class DidatticApriori:
             self.min_sup = np.round(len(transactions) * self.min_sup)
 
         stop = False
+        self.jdata['itemsets'] = list()
         while not stop:
             self.__count_itemsets(transactions, max_len)
             self.__remove_unfrequent()
@@ -88,11 +95,13 @@ class DidatticApriori:
         return lift
 
     def __print_rules(self):
-
+        self.jdata['rules'] = list()
         for rule in sorted(self.rule_conf):
             unfrequent = 'X' if rule in self.rule_unfrequent else ''
             lift = 'lift: %.2f' % self.rule_lift[rule] if rule in self.rule_lift else ''
             print('%s --> %s' % (rule[0], rule[1]), 'conf: %.2f' % self.rule_conf[rule], unfrequent, lift)
+            self.jdata['rules'].append((rule[0], rule[1], self.rule_conf[rule], unfrequent,
+                                        self.rule_lift[rule] if rule in self.rule_lift else None))
 
     def extract_rules(self, min_conf):
         self.min_conf = min_conf
@@ -120,4 +129,8 @@ class DidatticApriori:
                             self.rule_lift[rule] = self.__calc_lift(itemset, head, tail)
 
         self.__print_rules()
+
+
+    def get_jdata(self):
+        return self.jdata
 
