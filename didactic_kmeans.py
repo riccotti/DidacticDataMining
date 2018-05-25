@@ -152,7 +152,7 @@ class DidatticKMeans:
             kmeans_iteration = dict()
             kmeans_iteration['centers'] = [c.tolist() for c in centroids]
             kmeans_iteration['labels'] = labels[:]
-            kmeans_data['iterations'].append(kmeans_iteration)
+            self.jdata['iterations'].append(kmeans_iteration)
             new_centroids = self.__calculate_centroids(clusters)
             iteration += 1
 

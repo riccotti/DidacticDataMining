@@ -1,5 +1,5 @@
 Contract, Sex, Minutes, Churn
-Italy, Classic, F, 30, YES
-German, Travel, M, 60, NO
-Italy, Travel, F, 100, NO
-Italy, Travel, M, 100, YES
+Classic, F, 30, YES
+Travel, M, 60, NO
+Travel, F, 100, NO
+Travel, M, 100, YES

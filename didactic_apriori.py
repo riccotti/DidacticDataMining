@@ -43,7 +43,7 @@ class DidatticApriori:
                 if self.sup_type == 'r':
                     sup /= float(num_transactions)
                 print(itemset, '%.2f' % sup, unfrequent)
-                self.jdata['itemsets'][-1].append((itemset, sup, unfrequent))
+                self.jdata['itemsets'][-1].append([list(itemset), sup, unfrequent])
                 count += 1
                 if unfrequent == 'X':
                     count_unfrequent += 1
@@ -51,7 +51,9 @@ class DidatticApriori:
         return count == count_unfrequent
 
     def fit(self, transactions, step_by_step=False):
-        
+
+        self.jdata = dict()
+        self.jdata['min_sup'] = self.min_sup
         sorted_transactions = list()
         for transaction in transactions:
             sorted_transactions.append(sorted(transaction))
@@ -100,14 +102,15 @@ class DidatticApriori:
             unfrequent = 'X' if rule in self.rule_unfrequent else ''
             lift = 'lift: %.2f' % self.rule_lift[rule] if rule in self.rule_lift else ''
             print('%s --> %s' % (rule[0], rule[1]), 'conf: %.2f' % self.rule_conf[rule], unfrequent, lift)
-            self.jdata['rules'].append((rule[0], rule[1], self.rule_conf[rule], unfrequent,
-                                        self.rule_lift[rule] if rule in self.rule_lift else None))
+            self.jdata['rules'].append([list(rule[0]), list(rule[1]), self.rule_conf[rule], unfrequent,
+                                        self.rule_lift[rule] if rule in self.rule_lift else None])
 
     def extract_rules(self, min_conf):
         self.min_conf = min_conf
         self.rule_conf = dict()
         self.rule_unfrequent = dict()
         self.rule_lift = dict()
+        self.jdata['min_conf'] = self.min_conf
 
         analyzed_rules = set()
         for itemset in sorted(self.itemset_count):
@@ -129,7 +132,6 @@ class DidatticApriori:
                             self.rule_lift[rule] = self.__calc_lift(itemset, head, tail)
 
         self.__print_rules()
-
 
     def get_jdata(self):
         return self.jdata
