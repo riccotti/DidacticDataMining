@@ -61,9 +61,15 @@ class DidatticClassificationTree:
         self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
         self.step_by_step = step_by_step
+        self.jdata = None
 
     def fit(self, dataset_df, target):
         self.target = target
+        self.jdata = dict()
+        self.jdata['train'] = dataset_df.values
+        self.jdata['target'] = target
+        self.jdata['iterations'] = list()
+
         treestr, _, _ = self.iteration(dataset_df, target, self.fun, self.fun_name)
 
         if self.step_by_step:
@@ -94,8 +100,11 @@ edge [fontname=helvetica] ;
         return predicted_values
 
     def evaluate(self, test_df, predicted='Predicted'):
+        self.jdata['test'] = test_df.values
+        self.jdata['evaluation'] = dict()
         val = sorted(np.unique(test_df[self.target].values))
         tp, tn, fp, fn = self.get_confusion_matrix(test_df, self.target, predicted)
+        self.jdata['evaluation']['confusion_matrix'] = [tp, tn, fp, fn]
         self.print_confusion_matrix(val, tp, tn, fp, fn)
         p = self.precision(tp, tn, fp, fn)
         r = self.recall(tp, tn, fp, fn)
@@ -105,6 +114,10 @@ edge [fontname=helvetica] ;
         print('Recall', r, float(r))
         print('F1-measure', f1, float(f1))
         print('Accuracy', a, float(a))
+        self.jdata['evaluation']['precision'] = [p, float(p)]
+        self.jdata['evaluation']['recall'] = [r, float(r)]
+        self.jdata['evaluation']['f1score'] = [f1, float(f1)]
+        self.jdata['evaluation']['accuracy'] = [a, float(a)]
 
     def get_confusion_matrix(self, test_df, target, predicted='Predicted'):
         cm = confusion_matrix(test_df[target], test_df[predicted])
@@ -155,20 +168,24 @@ edge [fontname=helvetica] ;
             weight_dict[row[0]] += 1
 
         print(feature, sorted(weight_dict.keys()))
+        self.jdata['iterations'].append([feature, sorted(weight_dict.keys())])
 
         total = len(dataset_df)
 
         splitvalue_gain = dict()
         for sv in sorted(weight_dict):
             print('\t', sv, weight_dict[sv])
+            self.jdata['iterations'].append(['\t', sv, weight_dict[sv]])
             if weight_dict[sv] > 0:
                 p = list()
                 for k in sorted(count_dict):
                     v = count_dict[k]
                     if k[0] == sv:
                         print('\t\t%s, %d/%d' % (k[1], count_dict[k], weight_dict[sv]))
+                        self.jdata['iterations'].append(['\t\t%s, %d/%d' % (k[1], count_dict[k], weight_dict[sv])])
                         p.append(Fraction(v, weight_dict[sv]))
                 print('\t', end=',')
+                self.jdata['iterations'].append(['\t'])
                 splitvalue_gain[sv] = fun(p, weight_dict[sv])
             else:
                 splitvalue_gain[sv] = Fraction(0, 1)
@@ -183,6 +200,7 @@ edge [fontname=helvetica] ;
 
         print_str = print_str[:-2] + '= %s' % print_fraction(gain_child, total)
         print('\t', print_str)
+        self.jdata['iterations'].append(['\t', print_str])
         return gain_child
 
     def calculate_children_gains(self, dataset_df, target, fun, parentgain):
@@ -201,6 +219,7 @@ edge [fontname=helvetica] ;
                 v2 = print_fraction(cg, len(dataset_df))
                 v3 = print_fraction(parentgain - cg, len(dataset_df))
                 print('\tDelta Gain: %s - %s = %s\n' % (v1, v2, v3))
+                self.jdata['iterations'].append(['\tDelta Gain: %s - %s = %s\n' % (v1, v2, v3)])
                 if self.step_by_step:
                     val = input('')
 
@@ -222,6 +241,7 @@ edge [fontname=helvetica] ;
                         v2 = print_fraction(cg, len(dataset_df))
                         v3 = print_fraction(parentgain - cg, len(dataset_df))
                         print('\tDelta Gain: %s - %s = %s\n' % (v1, v2, v3))
+                        self.jdata['iterations'].append(['\tDelta Gain: %s - %s = %s\n' % (v1, v2, v3)])
                         if self.step_by_step:
                             val = input('')
 
@@ -241,6 +261,7 @@ edge [fontname=helvetica] ;
                     v2 = print_fraction(cg, len(dataset_df))
                     v3 = print_fraction(parentgain - cg, len(dataset_df))
                     print('\tDelta Gain: %s - %s = %s\n' % (v1, v2, v3))
+                    self.jdata['iterations'].append(['\tDelta Gain: %s - %s = %s\n' % (v1, v2, v3)])
                     if self.step_by_step:
                         val = input('')
 
@@ -375,8 +396,9 @@ edge [fontname=helvetica] ;
     def iteration(self, dataset_df, target, fun, fun_name, pathfeature=None, idnode=0):
 
         if len(dataset_df) < self.min_samples_leaf:
-            leaf = self.get_leaf(dataset_df, target, fun_name, parentgain, idnode)
-            print('--> Min leaf constraint 3. Stop\n')
+            leaf = self.get_leaf(dataset_df, target, fun_name, 0.0, idnode)
+            print('--> Min leaf constraint %s. Stop\n' % self.min_samples_leaf)
+            self.jdata['iterations'].append(['--> Min leaf constraint %s. Stop\n' % self.min_samples_leaf])
             if self.step_by_step:
                 val = input('')
             return leaf, idnode, idnode
@@ -386,11 +408,14 @@ edge [fontname=helvetica] ;
             pathfeature = 'Root'
 
         print(pathfeature)
+        self.jdata['iterations'].append([pathfeature])
         print('Parent')
+        self.jdata['iterations'].append(['Parent'])
         parentgain = self.get_parent_gain(dataset_df, target, fun)
         if parentgain == 0:
             leaf = self.get_leaf(dataset_df, target, fun_name, parentgain, idnode)
             print('--> No gain 1. Stop\n')
+            self.jdata['iterations'].append(['--> No gain 1. Stop\n'])
             if self.step_by_step:
                 val = input('')
             return leaf, idnode, idnode
@@ -401,6 +426,7 @@ edge [fontname=helvetica] ;
 
         if maxfeature is not None:
             print('--> Split By', maxfeature, '\n')
+            self.jdata['iterations'].append(['--> Split By', maxfeature, '\n'])
             feature_subdataset = self.get_subdataset(dataset_df, target, maxfeature,
                                                      maxgain, maxftype, maxsplitway)
 
@@ -434,12 +460,14 @@ edge [fontname=helvetica] ;
             else:
                 leaf = self.get_leaf(dataset_df, target, fun_name, parentgain, idnode)
                 print('--> Min leaf constraint 2. Stop\n')
+                self.jdata['iterations'].append(['--> Min leaf constraint 2. Stop\n'])
                 if self.step_by_step:
                     val = input('')
                 return leaf, idnode, idnode
         else:
             leaf = self.get_leaf(dataset_df, target, fun_name, parentgain, idnode)
             print('--> No gain 2. Stop\n')
+            self.jdata['iterations'].append(['--> No gain 2. Stop\n'])
             if self.step_by_step:
                 val = input('')
             return leaf, idnode, idnode
@@ -515,6 +543,9 @@ edge [fontname=helvetica] ;
 
         if idnode in tree_leaves:
             return tree_leaves[idnode]
+
+    def get_jdata(self):
+        return self.jdata
 
 
 

@@ -5,6 +5,12 @@ from collections import defaultdict
 from scipy.spatial.distance import pdist, squareform
 
 
+def default_to_regular(d):
+    if isinstance(d, defaultdict):
+        d = {k: default_to_regular(v) for k, v in d.items()}
+    return d
+
+
 def plot_dbscan(dataset, maxvalue_x=10, maxvalue_y=10, title=None, radius=1.9,
                 core_points=None, border_points=None, noise_points=None, clusters=None):
 
@@ -80,8 +86,13 @@ class DidatticDbscan:
     def __init__(self, eps=1.8, min_pts=3):
         self.eps = eps
         self.min_pts = min_pts
+        self.jdata = None
 
     def fit(self, dataset, step_by_step=False):
+
+        self.jdata = dict()
+        self.jdata['data'] = dataset.tolist()
+        self.jdata['iterations'] = list()
 
         maxvalue_x = np.max(dataset, 0)[0]  # np.max(dataset) #np.max(dataset, 0)[0]
         maxvalue_y = np.max(dataset, 0)[1]  # np.max(dataset) #np.max(dataset, 0)[1]
@@ -106,7 +117,8 @@ class DidatticDbscan:
 
         plot_dbscan(dataset, title='Dbscan - Core Points', radius=self.eps, core_points=core_points,
                     maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
-        print('Core Points', core_points.keys())
+        print('Core Points', list(core_points.keys()))
+        self.jdata['iterations'].append({'core': list(core_points.keys())})
         if step_by_step:
             ret = input('')
 
@@ -130,14 +142,16 @@ class DidatticDbscan:
         plot_dbscan(dataset, title='Dbscan - Border Points', radius=self.eps,
                     core_points=core_points, border_points=border_points,
                     maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
-        print('Border Points', border_points.keys())
+        print('Border Points', list(border_points.keys()))
+        self.jdata['iterations'].append({'border': list(border_points.keys())})
         if step_by_step:
             ret = input('')
 
         plot_dbscan(dataset, title='Dbscan - Noise Points', radius=self.eps,
                     core_points=core_points, border_points=border_points, noise_points=noise_points,
                     maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
-        print('Noise Points', noise_points.keys())
+        print('Noise Points', list(noise_points.keys()))
+        self.jdata['iterations'].append({'noise': list(noise_points.keys())})
         if step_by_step:
             ret = input('')
 
@@ -160,13 +174,22 @@ class DidatticDbscan:
                     clusters[pidx_clusterid[pidx]].add(pidx2)
 
         clusters_new = list()
+        labels = dict()
         for clusterid in clusters:
             lista = list()
             for pidx in clusters[clusterid]:
                 lista.append(dataset[pidx])
+                labels[pidx] = clusterid
             clusters_new.append(lista)
+        for pidx in noise_points.keys():
+            labels[pidx] = -1
+        labels = [labels[pidx] for pidx in sorted(labels.keys())]
+        self.jdata['iterations'].append({'labels': labels})
 
         plot_dbscan(dataset, title='Dbscan - Result', clusters=clusters_new, noise_points=noise_points,
                     maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
-        print(clusters)
+        print(default_to_regular(clusters))
+
+    def get_jdata(self):
+        return self.jdata
 

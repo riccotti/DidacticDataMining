@@ -5,6 +5,12 @@ from collections import defaultdict
 from scipy.spatial.distance import pdist, squareform
 
 
+def default_to_regular(d):
+    if isinstance(d, defaultdict):
+        d = {k: default_to_regular(v) for k, v in d.items()}
+    return d
+
+
 def dist2similarity(dist_matrix):
     max_val = np.max(dist_matrix)
     sim_matrix = np.zeros(dist_matrix.shape)
@@ -103,6 +109,7 @@ class DidatticHierarchical:
 
     def __init__(self):
         np.set_printoptions(precision=2, suppress=True)
+        self.jdata = None
 
     def fit(self, dataset, link_criteria='single', use_distances=True, step_by_step=False, distance_type='euclidean'):
 
@@ -118,6 +125,10 @@ class DidatticHierarchical:
         else:
             print("Unknown link criteria, please specify 'single', 'complete' or 'average'")
             return
+
+        self.jdata = dict()
+        self.jdata['data'] = dataset.tolist()
+        self.jdata['iterations'] = list()
 
         dist_matrix = squareform(pdist(dataset, distance_type))
         agg_fun = np.min
@@ -141,7 +152,7 @@ class DidatticHierarchical:
         dist_merge = 0.0 if use_distances else 1.0
         dist_clustering_dict = dict()
         while True:
-
+            hierarchical_iteration = dict()
             if iterid > 0:
                 dist_clustering_dict[dist_merge] = clusters_labels
                 plot_dendogram(dist_clustering_dict, npoints, use_distances,
@@ -154,6 +165,9 @@ class DidatticHierarchical:
             print('%s merge' % ('distance' if use_distances else 'similarity'), '%.2f' % dist_merge)
             print(clusters_labels)
             print(dist_matrix)
+            hierarchical_iteration['dist_merge'] = dist_merge
+            hierarchical_iteration['clusters_labels'] = clusters_labels
+            hierarchical_iteration['dist_matrix'] = dist_matrix
 
             if dist_matrix.shape[0] == 1 and dist_matrix.shape[1] == 1:
                 break
@@ -170,7 +184,8 @@ class DidatticHierarchical:
                 points_involved[p1] = 0
                 points_involved[p2] = 0
             
-            print(point_aggregatewith)
+            print(default_to_regular(point_aggregatewith))
+            hierarchical_iteration['point_aggregatewith'] = default_to_regular(point_aggregatewith)
             
             new_clusters_tmp = dict()
             for p, plist in point_aggregatewith.items():
@@ -231,4 +246,9 @@ class DidatticHierarchical:
 
             if step_by_step:
                 ret = input('')
+
+            self.jdata['iterations'].append(hierarchical_iteration)
+
+    def get_jdata(self):
+        return self.jdata
 
