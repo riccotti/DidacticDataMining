@@ -60,6 +60,11 @@ class DidatticApriori:
         transactions = sorted_transactions
         self.jdata['data'] = transactions
 
+        self.jdata['parameters'] = {
+            'min_sup': self.min_sup,
+            'sup_type': self.sup_type,
+        }
+
         max_len = 1
         self.num_transactions = len(transactions)
 
@@ -103,7 +108,7 @@ class DidatticApriori:
             lift = 'lift: %.2f' % self.rule_lift[rule] if rule in self.rule_lift else ''
             print('%s --> %s' % (rule[0], rule[1]), 'conf: %.2f' % self.rule_conf[rule], unfrequent, lift)
             self.jdata['rules'].append([list(rule[0]), list(rule[1]), self.rule_conf[rule], unfrequent,
-                                        self.rule_lift[rule] if rule in self.rule_lift else None])
+                                        self.rule_lift[rule] if rule in self.rule_lift else ''])
 
     def extract_rules(self, min_conf):
         self.min_conf = min_conf
@@ -111,6 +116,7 @@ class DidatticApriori:
         self.rule_unfrequent = dict()
         self.rule_lift = dict()
         self.jdata['min_conf'] = self.min_conf
+        self.jdata['parameters']['min_conf'] = self.min_conf
 
         analyzed_rules = set()
         for itemset in sorted(self.itemset_count):

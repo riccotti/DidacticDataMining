@@ -1,3 +1,4 @@
+import json
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -128,6 +129,11 @@ class DidatticHierarchical:
 
         self.jdata = dict()
         self.jdata['data'] = dataset.tolist()
+        self.jdata['parameters'] = {
+            'link_criteria': link_criteria,
+            'distance': distance_type,
+            'matrix_type': 'distance' if use_distances else 'similarity',
+        }
         self.jdata['iterations'] = list()
 
         dist_matrix = squareform(pdist(dataset, distance_type))
@@ -166,8 +172,8 @@ class DidatticHierarchical:
             print(clusters_labels)
             print(dist_matrix)
             hierarchical_iteration['dist_merge'] = dist_merge
-            hierarchical_iteration['clusters_labels'] = clusters_labels
-            hierarchical_iteration['dist_matrix'] = dist_matrix
+            hierarchical_iteration['clusters_labels'] = json.loads(json.dumps(clusters_labels))
+            hierarchical_iteration['dist_matrix'] = dist_matrix.tolist()
 
             if dist_matrix.shape[0] == 1 and dist_matrix.shape[1] == 1:
                 break
@@ -185,7 +191,7 @@ class DidatticHierarchical:
                 points_involved[p2] = 0
             
             print(default_to_regular(point_aggregatewith))
-            hierarchical_iteration['point_aggregatewith'] = default_to_regular(point_aggregatewith)
+            hierarchical_iteration['point_aggregatewith'] = {str(k): v for k, v in point_aggregatewith.items()}
             
             new_clusters_tmp = dict()
             for p, plist in point_aggregatewith.items():

@@ -92,6 +92,10 @@ class DidatticDbscan:
 
         self.jdata = dict()
         self.jdata['data'] = dataset.tolist()
+        self.jdata['parameters'] = {
+            'eps': self.eps,
+            'min_pts': self.min_pts,
+        }
         self.jdata['iterations'] = list()
 
         maxvalue_x = np.max(dataset, 0)[0]  # np.max(dataset) #np.max(dataset, 0)[0]

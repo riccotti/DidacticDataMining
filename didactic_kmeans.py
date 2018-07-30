@@ -78,6 +78,7 @@ class DidatticKMeans:
         self.K = K
         self.centroid_indexs = centroid_indexs
         self.dist = dist
+        self.dist_str = 'euclidean' if dist is euclidean_distance else 'manhattan'
         self.jdata = None
 
     def __continue__(self, c_old, c_new):
@@ -125,6 +126,12 @@ class DidatticKMeans:
         npoints = len(dataset)
         if self.centroid_indexs is None:
             self.centroid_indexs = np.random.randint(0, npoints, self.K)
+
+        self.jdata['parameters'] = {
+            'nbr_clusters': self.K,
+            'centroid_indexs': list(self.centroid_indexs),
+            'distance': self.dist_str,
+        }
 
         centroids = self.__init_centroids(dataset, indexes=self.centroid_indexs)
         clusters, labels = self.__calculate_clusters(dataset, centroids)
