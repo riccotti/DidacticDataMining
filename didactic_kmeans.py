@@ -73,12 +73,15 @@ def manhattan_distance(p1, p2):
 
 
 class DidatticKMeans:
-    def __init__(self, K=2, centroid_indexs=None, dist=euclidean_distance):
+    def __init__(self, K=2, centroid_indexs=None, dist='euclidean'):
 
         self.K = K
         self.centroid_indexs = centroid_indexs
-        self.dist = dist
-        self.dist_str = 'euclidean' if dist is euclidean_distance else 'manhattan'
+        self.dist_str = dist
+        if self.dist_str == 'euclidean':
+            self.dist = euclidean_distance
+        elif self.dist_str == 'manhattan':
+            self.dist = manhattan_distance
         self.jdata = None
 
     def __continue__(self, c_old, c_new):
