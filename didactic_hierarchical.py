@@ -112,7 +112,8 @@ class DidatticHierarchical:
         np.set_printoptions(precision=2, suppress=True)
         self.jdata = None
 
-    def fit(self, dataset, link_criteria='single', use_distances=True, step_by_step=False, distance_type='euclidean'):
+    def fit(self, dataset, link_criteria='single', use_distances=True, step_by_step=False, distance_type='euclidean',
+            plot_figures=True):
 
         if link_criteria == 'single' or link_criteria == 'min':
             link_fun = np.min if use_distances else np.max
@@ -161,16 +162,18 @@ class DidatticHierarchical:
             hierarchical_iteration = dict()
             if iterid > 0:
                 dist_clustering_dict[dist_merge] = clusters_labels
-                plot_dendogram(dist_clustering_dict, npoints, use_distances,
-                               '%s-Linkage - Iteration %d' % (title_alg, iterid))
+                if plot_figures:
+                    plot_dendogram(dist_clustering_dict, npoints, use_distances,
+                                   '%s-Linkage - Iteration %d' % (title_alg, iterid))
 
             if not use_distances and dist_merge == 0.0:
                 return
 
-            print('iter', iterid)
-            print('%s merge' % ('distance' if use_distances else 'similarity'), '%.2f' % dist_merge)
-            print(clusters_labels)
-            print(dist_matrix)
+            if plot_figures:
+                print('iter', iterid)
+                print('%s merge' % ('distance' if use_distances else 'similarity'), '%.2f' % dist_merge)
+                print(clusters_labels)
+                print(dist_matrix)
             hierarchical_iteration['dist_merge'] = dist_merge
             hierarchical_iteration['clusters_labels'] = json.loads(json.dumps(clusters_labels))
             hierarchical_iteration['dist_matrix'] = dist_matrix.tolist()
@@ -189,8 +192,9 @@ class DidatticHierarchical:
                 point_aggregatewith[p1].append(p2)
                 points_involved[p1] = 0
                 points_involved[p2] = 0
-            
-            print(default_to_regular(point_aggregatewith))
+
+            if plot_figures:
+                print(default_to_regular(point_aggregatewith))
             hierarchical_iteration['point_aggregatewith'] = {str(k): v for k, v in point_aggregatewith.items()}
             
             new_clusters_tmp = dict()

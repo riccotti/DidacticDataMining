@@ -63,7 +63,7 @@ class DidatticClassificationTree:
         self.step_by_step = step_by_step
         self.jdata = None
 
-    def fit(self, dataset_df, target):
+    def fit(self, dataset_df, target, plot_figures=True):
         self.target = target
         self.jdata = dict()
         self.jdata['train'] = dataset_df.values.tolist()
@@ -88,10 +88,12 @@ edge [fontname=helvetica] ;
         tredotfile = open('tree.dot', 'w')
         tredotfile.write(dot_str)
         tredotfile.close()
-        with open('tree.dot', 'r') as dot_data:
-            dot_data = dot_data.read()
-        graph = pydotplus.graph_from_dot_data(dot_data)
-        display(Image(graph.create_png()))
+
+        if plot_figures:
+            with open('tree.dot', 'r') as dot_data:
+                dot_data = dot_data.read()
+            graph = pydotplus.graph_from_dot_data(dot_data)
+            display(Image(graph.create_png()))
 
         self.tree_nodes, self.tree_leaves, self.tree_edges = self.build_classifier(treestr)
 
@@ -104,21 +106,26 @@ edge [fontname=helvetica] ;
 
         return predicted_values
 
-    def evaluate(self, test_df, predicted='Predicted'):
+    def evaluate(self, test_df, predicted='Predicted', plot_figures=True):
         self.jdata['test'] = test_df.values.tolist()
         self.jdata['evaluation'] = dict()
         val = sorted(np.unique(test_df[self.target].values))
         tp, tn, fp, fn = self.get_confusion_matrix(test_df, self.target, predicted)
         self.jdata['evaluation']['confusion_matrix'] = [tp, tn, fp, fn]
-        self.print_confusion_matrix(val, tp, tn, fp, fn)
+
+        if plot_figures:
+            self.print_confusion_matrix(val, tp, tn, fp, fn)
+
         p = self.precision(tp, tn, fp, fn)
         r = self.recall(tp, tn, fp, fn)
         a = self.accuracy(tp, tn, fp, fn)
         f1 = self.fmeasure(tp, tn, fp, fn)
-        print('Precision', p, float(p))
-        print('Recall', r, float(r))
-        print('F1-measure', f1, float(f1))
-        print('Accuracy', a, float(a))
+
+        if plot_figures:
+            print('Precision', p, float(p))
+            print('Recall', r, float(r))
+            print('F1-measure', f1, float(f1))
+            print('Accuracy', a, float(a))
         self.jdata['evaluation']['precision'] = [str(p), float(p)]
         self.jdata['evaluation']['recall'] = [str(r), float(r)]
         self.jdata['evaluation']['f1score'] = [str(f1), float(f1)]

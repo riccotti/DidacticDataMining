@@ -96,7 +96,7 @@ class DidatticKMeans:
             for c in centroids:
                 dist_c.append(self.dist(p, c))
 
-            cid = np.argmin(dist_c)
+            cid = int(np.argmin(dist_c))
             clusters[cid].append(p)
             labels.append(cid)
         return clusters, labels
@@ -117,14 +117,15 @@ class DidatticKMeans:
             centroids.append(dataset[idx])
         return centroids
 
-    def fit(self, dataset, step_by_step=False):
+    def fit(self, dataset, step_by_step=False, plot_figures=True):
 
         self.jdata = dict()
         self.jdata['data'] = dataset.tolist()
         self.jdata['iterations'] = list()
         kmeans_iteration = dict()
 
-        plot_kmeans(dataset, title='K-Means - Dataset', maxvalue=np.max(dataset)+1)
+        if plot_figures:
+            plot_kmeans(dataset, title='K-Means - Dataset', maxvalue=np.max(dataset)+1)
 
         npoints = len(dataset)
         if self.centroid_indexs is None:
@@ -138,9 +139,12 @@ class DidatticKMeans:
 
         centroids = self.__init_centroids(dataset, indexes=self.centroid_indexs)
         clusters, labels = self.__calculate_clusters(dataset, centroids)
-        plot_kmeans(dataset, centroids=centroids, bisecting_line=True,
+
+        if plot_figures:
+            plot_kmeans(dataset, centroids=centroids, bisecting_line=True,
                     title='K-Means - Iteration 0', clusters=clusters, maxvalue=np.max(dataset)+1)
-        self.__print_centroids(centroids)
+            self.__print_centroids(centroids)
+
         kmeans_iteration['centers'] = [c.tolist() for c in centroids]
         kmeans_iteration['labels'] = labels[:]
         self.jdata['iterations'].append(kmeans_iteration)
@@ -154,9 +158,10 @@ class DidatticKMeans:
         iteration = 1
         while not self.__continue__(centroids, new_centroids):
             centroids = new_centroids
-            plot_kmeans(dataset, centroids=centroids, bisecting_line=True,
-                        title='K-Means - Iteration %d' % iteration, clusters=clusters, maxvalue=np.max(dataset)+1)
-            self.__print_centroids(centroids)
+            if plot_figures:
+                plot_kmeans(dataset, centroids=centroids, bisecting_line=True,
+                            title='K-Means - Iteration %d' % iteration, clusters=clusters, maxvalue=np.max(dataset)+1)
+                self.__print_centroids(centroids)
 
             clusters, labels = self.__calculate_clusters(dataset, centroids)
             kmeans_iteration = dict()
@@ -169,11 +174,11 @@ class DidatticKMeans:
             if step_by_step:
                 val = input('')
 
-        plot_kmeans(dataset, centroids=centroids, bisecting_line=True,
-                    title='K-Means - Iteration %d' % iteration, clusters=clusters, maxvalue=np.max(dataset)+1)
-        self.__print_centroids(centroids)
-
-        plot_kmeans(dataset, clusters=clusters, title='K-Means - Result', maxvalue=np.max(dataset)+1)
+        if plot_figures:
+            plot_kmeans(dataset, centroids=centroids, bisecting_line=True,
+                        title='K-Means - Iteration %d' % iteration, clusters=clusters, maxvalue=np.max(dataset)+1)
+            self.__print_centroids(centroids)
+            plot_kmeans(dataset, clusters=clusters, title='K-Means - Result', maxvalue=np.max(dataset)+1)
 
     def get_jdata(self):
         return self.jdata

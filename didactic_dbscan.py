@@ -88,7 +88,7 @@ class DidatticDbscan:
         self.min_pts = min_pts
         self.jdata = None
 
-    def fit(self, dataset, step_by_step=False):
+    def fit(self, dataset, step_by_step=False, plot_figures=True):
 
         self.jdata = dict()
         self.jdata['data'] = dataset.tolist()
@@ -101,8 +101,9 @@ class DidatticDbscan:
         maxvalue_x = np.max(dataset, 0)[0]  # np.max(dataset) #np.max(dataset, 0)[0]
         maxvalue_y = np.max(dataset, 0)[1]  # np.max(dataset) #np.max(dataset, 0)[1]
 
-        plot_dbscan(dataset, title='Dbscan - Init', radius=self.eps,
-                    maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
+        if plot_figures:
+            plot_dbscan(dataset, title='Dbscan - Init', radius=self.eps,
+                        maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
         if step_by_step:
             ret = input('')
 
@@ -119,9 +120,11 @@ class DidatticDbscan:
 
                 # print pidx, np.where(distances <= eps), ) #distances
 
-        plot_dbscan(dataset, title='Dbscan - Core Points', radius=self.eps, core_points=core_points,
-                    maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
-        print('Core Points', list(core_points.keys()))
+        if plot_figures:
+            plot_dbscan(dataset, title='Dbscan - Core Points', radius=self.eps, core_points=core_points,
+                        maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
+            print('Core Points', list(core_points.keys()))
+
         self.jdata['iterations'].append({'core': list(core_points.keys())})
         if step_by_step:
             ret = input('')
@@ -143,18 +146,22 @@ class DidatticDbscan:
             if not is_border:
                 noise_points[pidx] = 0
 
-        plot_dbscan(dataset, title='Dbscan - Border Points', radius=self.eps,
-                    core_points=core_points, border_points=border_points,
-                    maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
-        print('Border Points', list(border_points.keys()))
+        if plot_figures:
+            plot_dbscan(dataset, title='Dbscan - Border Points', radius=self.eps,
+                        core_points=core_points, border_points=border_points,
+                        maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
+            print('Border Points', list(border_points.keys()))
+
         self.jdata['iterations'].append({'border': list(border_points.keys())})
         if step_by_step:
             ret = input('')
 
-        plot_dbscan(dataset, title='Dbscan - Noise Points', radius=self.eps,
-                    core_points=core_points, border_points=border_points, noise_points=noise_points,
-                    maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
-        print('Noise Points', list(noise_points.keys()))
+        if plot_figures:
+            plot_dbscan(dataset, title='Dbscan - Noise Points', radius=self.eps,
+                        core_points=core_points, border_points=border_points, noise_points=noise_points,
+                        maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
+            print('Noise Points', list(noise_points.keys()))
+
         self.jdata['iterations'].append({'noise': list(noise_points.keys())})
         if step_by_step:
             ret = input('')
@@ -190,9 +197,10 @@ class DidatticDbscan:
         labels = [labels[pidx] for pidx in sorted(labels.keys())]
         self.jdata['iterations'].append({'labels': labels})
 
-        plot_dbscan(dataset, title='Dbscan - Result', clusters=clusters_new, noise_points=noise_points,
-                    maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
-        print(default_to_regular(clusters))
+        if plot_figures:
+            plot_dbscan(dataset, title='Dbscan - Result', clusters=clusters_new, noise_points=noise_points,
+                        maxvalue_x=maxvalue_x, maxvalue_y=maxvalue_y)
+            print(default_to_regular(clusters))
 
     def get_jdata(self):
         return self.jdata
