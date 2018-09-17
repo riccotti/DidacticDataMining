@@ -195,6 +195,7 @@ class DidatticHierarchical:
 
             if plot_figures:
                 print(default_to_regular(point_aggregatewith))
+
             hierarchical_iteration['point_aggregatewith'] = {str(k): v for k, v in point_aggregatewith.items()}
             
             new_clusters_tmp = dict()
