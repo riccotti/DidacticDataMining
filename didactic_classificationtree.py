@@ -134,10 +134,10 @@ edge [fontname=helvetica] ;
     def get_confusion_matrix(self, test_df, target, predicted='Predicted'):
         cm = confusion_matrix(test_df[target], test_df[predicted])
 
-        tp = cm[1][1]
-        tn = cm[0][0]
-        fp = cm[0][1]
-        fn = cm[1][0]
+        tp = int(cm[1][1])
+        tn = int(cm[0][0])
+        fp = int(cm[0][1])
+        fn = int(cm[1][0])
 
         return tp, tn, fp, fn
 
@@ -414,13 +414,15 @@ edge [fontname=helvetica] ;
     def iteration(self, dataset_df, target, fun, fun_name, pathfeature=None, idnode=0):
 
         # self.jdata['tree']['node']
+        values_json = dataset_df[target].value_counts().to_dict()
+        values_json = {k: int(v) for k, v in values_json.items()}
         jnode = {
             'name': '',
             'parent_gain': 0.0,
             # 'split_by': None,
             # 'split_gain': None,
             'records': len(dataset_df),
-            'values': dataset_df[target].value_counts().to_dict(),
+            'values': values_json,
             # 'class_majority': None,
             'children': list(),
             'calculus': ''
