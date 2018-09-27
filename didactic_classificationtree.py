@@ -66,6 +66,7 @@ class DidatticClassificationTree:
     def fit(self, dataset_df, target, plot_figures=True):
         self.target = target
         self.jdata = dict()
+        self.jdata['columns'] = dataset_df.columns.tolist()
         self.jdata['train'] = dataset_df.values.tolist()
         self.jdata['target'] = [target, dataset_df.columns.tolist().index(target)]
         self.jdata['parameters'] = {
