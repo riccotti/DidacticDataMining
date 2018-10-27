@@ -166,23 +166,56 @@ class DidatticDbscan:
         if step_by_step:
             ret = input('')
 
+        # clusters = defaultdict(set)
+        # pidx_clusterid = dict()
+        # clusterid = 0
+        # for pidx, distances in enumerate(dist_matrix):
+        #     pidx_neighbors[pidx] = np.where(distances <= self.eps)[0]
+        #     nbr_neighbors = len(pidx_neighbors[pidx])
+        #     print(pidx, nbr_neighbors, pidx_neighbors[pidx])
+        #
+        #     if nbr_neighbors >= self.min_pts:
+        #         if pidx not in pidx_clusterid:
+        #             pidx_clusterid[pidx] = clusterid
+        #             clusterid += 1
+        #             clusters[pidx_clusterid[pidx]].add(pidx)
+        #
+        #         for pidx2 in pidx_neighbors[pidx]:
+        #             if pidx2 not in pidx_clusterid:
+        #                 pidx_clusterid[pidx2] = pidx_clusterid[pidx]
+        #             clusters[pidx_clusterid[pidx]].add(pidx2)
+        #
+        # print(clusters)
+        # print(pidx_clusterid)
+        # print(clusterid)
+
+        cluster_tmp = dict()
+        for pidx in core_points:
+            distances = dist_matrix[pidx]
+            pidx_neighbors[pidx] = np.where(distances <= self.eps)[0].tolist()
+            cluster_tmp[pidx] = [pidx] + pidx_neighbors[pidx]
+            for pidx2 in pidx_neighbors[pidx]:
+                cluster_tmp[pidx2] = [pidx] + pidx_neighbors[pidx]
+
+        cluster_tmp2 = dict()
+        for pidx in cluster_tmp:
+            cluster_tmp2[pidx] = set(cluster_tmp[pidx])
+            for pidx2 in cluster_tmp:
+                if pidx != pidx2:
+                    if len(cluster_tmp2[pidx] & set(cluster_tmp[pidx2])) > 0:
+                        cluster_tmp2[pidx] |= set(cluster_tmp[pidx2])
+
+        clusterid = 0
         clusters = defaultdict(set)
         pidx_clusterid = dict()
-        clusterid = 0
-        for pidx, distances in enumerate(dist_matrix):
-            pidx_neighbors[pidx] = np.where(distances <= self.eps)[0]
-            nbr_neighbors = len(pidx_neighbors[pidx])
-
-            if nbr_neighbors >= self.min_pts:
-                if pidx not in pidx_clusterid:
-                    pidx_clusterid[pidx] = clusterid
-                    clusterid += 1
-                    clusters[pidx_clusterid[pidx]].add(pidx)
-
-                for pidx2 in pidx_neighbors[pidx]:
-                    if pidx2 not in pidx_clusterid:
-                        pidx_clusterid[pidx2] = pidx_clusterid[pidx]
-                    clusters[pidx_clusterid[pidx]].add(pidx2)
+        for pidx, neigh in cluster_tmp2.items():
+            if pidx not in pidx_clusterid:
+                pidx_clusterid[pidx] = clusterid
+                clusters[clusterid].add(pidx)
+                for n in neigh:
+                    pidx_clusterid[n] = clusterid
+                    clusters[clusterid].add(n)
+                clusterid += 1
 
         clusters_new = list()
         labels = dict()
