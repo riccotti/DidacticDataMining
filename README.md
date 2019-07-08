@@ -14,3 +14,4 @@ Links:
 * [DDMvp](https://kdd.isti.cnr.it/ddm/)
 * [DDM-REST](https://github.com/rinziv/DDM)
 * [Slides](https://github.com/riccotti/DidacticDataMining/tree/master/slides)
+* [Notebooks](https://github.com/riccotti/DidacticDataMining/tree/master/notebooks)
